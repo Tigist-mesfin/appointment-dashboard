@@ -11,8 +11,21 @@ import {
   LogOut,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+
+// inside SideBar component:
+
 
 export default function SideBar() {
+    const { logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();           // remove token + adminId
+    navigate("/login"); // redirect to login
+  };
   return (
     <div className="w-64 h-screen bg-primary text-text flex flex-col border-r border-gray-200 shadow-lg">
       {/* Logo / Title */}
@@ -36,8 +49,14 @@ export default function SideBar() {
 
       {/* Bottom Logout */}
       <div className="p-4 border-t border-gray-200 mt-auto">
-        {/* Later you can put real logout logic here */}
-        <NavItem label="Logout" icon={LogOut} to="/login" />
+        <button
+          onClick={handleLogout}
+          className="flex items-center w-full gap-3 px-3 py-3 rounded-lg text-sm font-medium 
+                     transition-all duration-200 cursor-pointer text-text hover:bg-primaryHover hover:text-primary"
+        >
+          <LogOut size={20} />
+          <span>Logout</span>
+        </button>
       </div>
     </div>
   );

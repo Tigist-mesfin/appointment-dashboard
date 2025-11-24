@@ -354,7 +354,7 @@ export default function Appointment() {
           </div>
 
           {/* Customer name */}
-          <div>
+          {/* <div>
             <Label className="mb-1 block">Customer Name</Label>
             <Input
               placeholder="Search customer..."
@@ -363,7 +363,7 @@ export default function Appointment() {
                 handleFilterChange("customerName", e.target.value)
               }
             />
-          </div>
+          </div> */}
         </div>
 
         <div className="flex justify-end gap-2">

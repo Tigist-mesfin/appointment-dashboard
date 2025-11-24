@@ -1,19 +1,9 @@
 // src/pages/Sms.jsx
 
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 
-import {
-  getSmsList,
-  createSms,
-  updateSms,
-  deleteSms,
-} from "../api/sms";
+import { getSmsList, createSms, updateSms, deleteSms } from "../api/sms";
 
 import {
   Table,
@@ -33,6 +23,14 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
+
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -42,6 +40,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
+import { getAllCustomers } from "../api/customers";
 
 import { Plus, Pencil, Trash2 } from "lucide-react";
 
@@ -51,6 +50,8 @@ function formatDateTime(iso) {
 }
 
 export default function Sms() {
+  const [customers, setCustomers] = useState([]);
+
   const { auth } = useContext(AuthContext);
   const token = auth?.token;
 
@@ -145,12 +146,23 @@ export default function Sms() {
   };
 
   // Add dialog handlers
-  const openAddDialog = () => {
+  const openAddDialog = async () => {
     setAddForm({
       customerId: "",
       title: "",
       description: "",
     });
+
+    if (token) {
+      try {
+        const { customers } = await getAllCustomers(token, 1, 100); // fetch 100 customers
+        setCustomers(customers);
+      } catch (err) {
+        console.error(err);
+        alert("Failed to load customers");
+      }
+    }
+
     setIsAddOpen(true);
   };
 
@@ -268,9 +280,7 @@ export default function Sms() {
       {loading && (
         <p className="text-sm text-gray-500">Loading SMS records...</p>
       )}
-      {error && (
-        <p className="text-sm text-red-500">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-500">{error}</p>}
 
       {/* Table */}
       {!loading && !error && (
@@ -286,9 +296,7 @@ export default function Sms() {
                 <TableHead>Description</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Created At</TableHead>
-                <TableHead className="w-32 text-right">
-                  Actions
-                </TableHead>
+                <TableHead className="w-32 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -312,12 +320,8 @@ export default function Sms() {
                     <TableCell>{sms.customer?.phone || "-"}</TableCell>
                     <TableCell>{sms.title}</TableCell>
                     <TableCell>{sms.description}</TableCell>
-                    <TableCell className="capitalize">
-                      {sms.status}
-                    </TableCell>
-                    <TableCell>
-                      {formatDateTime(sms.createdAt)}
-                    </TableCell>
+                    <TableCell className="capitalize">{sms.status}</TableCell>
+                    <TableCell>{formatDateTime(sms.createdAt)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Button
@@ -330,9 +334,7 @@ export default function Sms() {
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() =>
-                            handleDeleteClick(sms.id)
-                          }
+                          onClick={() => handleDeleteClick(sms.id)}
                         >
                           <Trash2 className="w-4 h-4 text-red-500" />
                         </Button>
@@ -350,8 +352,8 @@ export default function Sms() {
       {!loading && !error && (
         <div className="flex items-center justify-between mt-4">
           <p className="text-sm text-gray-500">
-            Showing page {currentPage} of {totalPages} (
-            {pagination.total} total SMS)
+            Showing page {currentPage} of {totalPages} ({pagination.total} total
+            SMS)
           </p>
           <div className="flex gap-2">
             <Button
@@ -382,24 +384,35 @@ export default function Sms() {
           </DialogHeader>
           <form onSubmit={handleAddSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label>Customer ID</Label>
-              <Input
-                type="number"
-                value={addForm.customerId}
-                onChange={(e) =>
-                  handleAddChange("customerId", e.target.value)
-                }
-                required
-              />
+              <Label >Select Customer</Label>
+              <Select
+                onValueChange={(value) => handleAddChange("customerId", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose customer" />
+                </SelectTrigger>
+
+                <SelectContent className="bg-white">
+                  {customers.length === 0 ? (
+                    <SelectItem value="" disabled>
+                      No customers found
+                    </SelectItem>
+                  ) : (
+                    customers.map((c) => (
+                      <SelectItem key={c.id} value={String(c.id)}>
+                        {c.name} — {c.phone}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
               <Label>Title</Label>
               <Input
                 value={addForm.title}
-                onChange={(e) =>
-                  handleAddChange("title", e.target.value)
-                }
+                onChange={(e) => handleAddChange("title", e.target.value)}
                 required
               />
             </div>
@@ -408,9 +421,7 @@ export default function Sms() {
               <Label>Description</Label>
               <Input
                 value={addForm.description}
-                onChange={(e) =>
-                  handleAddChange("description", e.target.value)
-                }
+                onChange={(e) => handleAddChange("description", e.target.value)}
                 required
               />
             </div>
@@ -431,7 +442,7 @@ export default function Sms() {
 
       {/* Edit SMS Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="bg-white" >
+        <DialogContent className="bg-white">
           <DialogHeader>
             <DialogTitle>Edit SMS</DialogTitle>
           </DialogHeader>
@@ -455,9 +466,7 @@ export default function Sms() {
               <Label>Title</Label>
               <Input
                 value={editForm.title}
-                onChange={(e) =>
-                  handleEditChange("title", e.target.value)
-                }
+                onChange={(e) => handleEditChange("title", e.target.value)}
                 required
               />
             </div>
@@ -477,9 +486,7 @@ export default function Sms() {
               <Label>Status</Label>
               <Input
                 value={editForm.status}
-                onChange={(e) =>
-                  handleEditChange("status", e.target.value)
-                }
+                onChange={(e) => handleEditChange("status", e.target.value)}
               />
               <p className="text-xs text-gray-500">
                 Example: pending, delivered, failed.
@@ -513,9 +520,7 @@ export default function Sms() {
               Are you sure you want to delete this SMS?
             </AlertDialogTitle>
           </AlertDialogHeader>
-          <p className="text-sm text-gray-600">
-            This action cannot be undone.
-          </p>
+          <p className="text-sm text-gray-600">This action cannot be undone.</p>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleteLoading}>
               Cancel

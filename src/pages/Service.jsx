@@ -346,7 +346,7 @@ export default function Service() {
             </Select>
           </div>
 
-          {/* Name search */}
+          {/* Name search
           <div>
             <Label className="mb-1 block">Service Name</Label>
             <Input
@@ -356,7 +356,7 @@ export default function Service() {
                 handleFilterChange("name", e.target.value)
               }
             />
-          </div>
+          </div> */}
         </div>
 
         <div className="flex justify-end gap-2">
