@@ -1,5 +1,6 @@
 // src/api/auth.js
-const BASE_URL = "https://appointment.shebabingo.com/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const BASE_URL = `${API_BASE_URL}`;
 
 export async function loginAdmin(userName, password) {
   const response = await fetch(`${BASE_URL}/admins/login`, {

@@ -1,6 +1,7 @@
 // src/api/sms.js
 
-const BASE_URL = "https://appointment.shebabingo.com/api/sms";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const BASE_URL = `${API_BASE_URL}/sms`;
 
 // Get all SMS records with pagination
 export async function getSmsList(

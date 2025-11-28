@@ -1,6 +1,7 @@
 // src/api/services.js
 
-const BASE_URL = "https://appointment.shebabingo.com/api/services";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const BASE_URL = `${API_BASE_URL}/services`;
 
 // Get all services with pagination + optional filters
 export async function getServices(

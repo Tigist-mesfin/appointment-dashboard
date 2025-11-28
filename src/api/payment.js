@@ -1,6 +1,7 @@
 // src/api/payment.js
 
-const BASE_URL = "https://appointment.shebabingo.com/api/payments";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const BASE_URL = `${API_BASE_URL}/payments`;
 
 // Get payments with pagination
 export async function getPayments(token, { page = 1, limit = 10 } = {}) {

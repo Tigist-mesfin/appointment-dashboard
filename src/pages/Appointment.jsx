@@ -1,11 +1,6 @@
 // src/pages/Appointment.jsx
 
-import React, {
-  useContext,
-  useEffect,
-  useState,
-  useCallback,
-} from "react";
+import React, { useContext, useEffect, useState, useCallback } from "react";
 import { AuthContext } from "../context/AuthContext";
 
 import {
@@ -49,6 +44,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
+import { getAllCustomers } from "../api/customers";
 
 import { Pencil, Trash2, Plus } from "lucide-react";
 
@@ -79,6 +75,7 @@ function formatDisplayDate(isoString) {
 }
 
 export default function Appointment() {
+  const [customers, setCustomers] = useState([]);
   const { auth } = useContext(AuthContext);
   const token = auth?.token;
 
@@ -136,16 +133,13 @@ export default function Appointment() {
           return;
         }
 
-        const { appointments, pagination: pg } = await getAppointments(
-          token,
-          {
-            page: pageToLoad,
-            limit: LIMIT,
-            status: filters.status,
-            hospitalName: filters.hospitalName.trim(),
-            customerName: filters.customerName.trim(),
-          }
-        );
+        const { appointments, pagination: pg } = await getAppointments(token, {
+          page: pageToLoad,
+          limit: LIMIT,
+          status: filters.status,
+          hospitalName: filters.hospitalName.trim(),
+          customerName: filters.customerName.trim(),
+        });
 
         setAppointments(appointments);
         setPagination({
@@ -199,12 +193,22 @@ export default function Appointment() {
   };
 
   // Add appointment handlers
-  const openAddDialog = () => {
+  const openAddDialog = async () => {
     setAddForm({
       customerId: "",
       dateTime: "",
       hospitalName: "",
     });
+    if (token) {
+      try {
+        const { customers } = await getAllCustomers(token, 1, 100); // fetch 100 customers
+        setCustomers(customers);
+      } catch (err) {
+        console.error(err);
+        alert("Failed to load customers");
+      }
+    }
+
     setIsAddOpen(true);
   };
 
@@ -325,9 +329,7 @@ export default function Appointment() {
             <Label className="mb-1 block">Status</Label>
             <Select
               value={filters.status}
-              onValueChange={(val) =>
-                handleFilterChange("status", val)
-              }
+              onValueChange={(val) => handleFilterChange("status", val)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select status" />
@@ -367,11 +369,7 @@ export default function Appointment() {
         </div>
 
         <div className="flex justify-end gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleClearFilters}
-          >
+          <Button variant="outline" size="sm" onClick={handleClearFilters}>
             Clear
           </Button>
           {/* Optional: explicit Apply button, but we already auto-load on change */}
@@ -383,9 +381,7 @@ export default function Appointment() {
       {loading && (
         <p className="text-sm text-gray-500">Loading appointments...</p>
       )}
-      {error && (
-        <p className="text-sm text-red-500">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-500">{error}</p>}
 
       {/* Table */}
       {!loading && !error && (
@@ -400,9 +396,7 @@ export default function Appointment() {
                 <TableHead>Date & Time</TableHead>
                 <TableHead>Hospital</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="w-32 text-right">
-                  Actions
-                </TableHead>
+                <TableHead className="w-32 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -424,13 +418,9 @@ export default function Appointment() {
                     <TableCell>{appt.customer?.name || "-"}</TableCell>
                     <TableCell>{appt.customer?.email || "-"}</TableCell>
                     <TableCell>{appt.customer?.phone || "-"}</TableCell>
-                    <TableCell>
-                      {formatDisplayDate(appt.dateTime)}
-                    </TableCell>
+                    <TableCell>{formatDisplayDate(appt.dateTime)}</TableCell>
                     <TableCell>{appt.hospitalName}</TableCell>
-                    <TableCell className="capitalize">
-                      {appt.status}
-                    </TableCell>
+                    <TableCell className="capitalize">{appt.status}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Button
@@ -443,9 +433,7 @@ export default function Appointment() {
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() =>
-                            handleDeleteClick(appt.id)
-                          }
+                          onClick={() => handleDeleteClick(appt.id)}
                         >
                           <Trash2 className="w-4 h-4 text-red-500" />
                         </Button>
@@ -463,8 +451,8 @@ export default function Appointment() {
       {!loading && !error && (
         <div className="flex items-center justify-between mt-4">
           <p className="text-sm text-gray-500">
-            Showing page {currentPage} of {totalPages} (
-            {pagination.total} total appointments)
+            Showing page {currentPage} of {totalPages} ({pagination.total} total
+            appointments)
           </p>
           <div className="flex gap-2">
             <Button
@@ -495,24 +483,35 @@ export default function Appointment() {
           </DialogHeader>
           <form onSubmit={handleAddSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label>Customer ID</Label>
-              <Input
-                type="number"
-                value={addForm.customerId}
-                onChange={(e) =>
-                  handleAddChange("customerId", e.target.value)
-                }
-                required
-              />
+              <Label>Select Customer</Label>
+              <Select
+                onValueChange={(value) => handleAddChange("customerId", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose customer" />
+                </SelectTrigger>
+
+                <SelectContent className="bg-white">
+                  {customers.length === 0 ? (
+                    <SelectItem value="" disabled>
+                      No customers found
+                    </SelectItem>
+                  ) : (
+                    customers.map((c) => (
+                      <SelectItem key={c.id} value={String(c.id)}>
+                        {c.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label>Date & Time</Label>
               <Input
                 type="datetime-local"
                 value={addForm.dateTime}
-                onChange={(e) =>
-                  handleAddChange("dateTime", e.target.value)
-                }
+                onChange={(e) => handleAddChange("dateTime", e.target.value)}
                 required
               />
             </div>
@@ -549,10 +548,7 @@ export default function Appointment() {
           <form onSubmit={handleEditSubmit} className="space-y-4">
             <div className="space-y-2 bg-white">
               <Label>Customer</Label>
-              <Input
-                value={editForm.customerName}
-                disabled
-              />
+              <Input value={editForm.customerName} disabled />
               <p className="text-xs text-gray-500">
                 Customer is not editable from here.
               </p>
@@ -562,9 +558,7 @@ export default function Appointment() {
               <Input
                 type="datetime-local"
                 value={editForm.dateTime}
-                onChange={(e) =>
-                  handleEditChange("dateTime", e.target.value)
-                }
+                onChange={(e) => handleEditChange("dateTime", e.target.value)}
                 required
               />
             </div>
@@ -582,9 +576,7 @@ export default function Appointment() {
               <Label>Status</Label>
               <Select
                 value={editForm.status}
-                onValueChange={(val) =>
-                  handleEditChange("status", val)
-                }
+                onValueChange={(val) => handleEditChange("status", val)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select status" />
@@ -623,9 +615,7 @@ export default function Appointment() {
               Are you sure you want to delete this appointment?
             </AlertDialogTitle>
           </AlertDialogHeader>
-          <p className="text-sm text-gray-600">
-            This action cannot be undone.
-          </p>
+          <p className="text-sm text-gray-600">This action cannot be undone.</p>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleteLoading}>
               Cancel

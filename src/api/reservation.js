@@ -1,6 +1,7 @@
 // src/api/reservation.js
 
-const BASE_URL = "https://appointment.shebabingo.com/api/reservations";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const BASE_URL = `${API_BASE_URL}/reservations`;
 
 // Get reservations with pagination + optional filters (date, startDate, endDate)
 export async function getReservations(

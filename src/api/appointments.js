@@ -1,6 +1,7 @@
 // src/api/appointments.js
 
-const BASE_URL = "https://appointment.shebabingo.com/api/appointments";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const BASE_URL = `${API_BASE_URL}/appointments`;
 
 // Get all appointments with pagination + optional filters
 export async function getAppointments(

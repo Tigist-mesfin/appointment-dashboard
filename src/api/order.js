@@ -1,6 +1,7 @@
 // src/api/order.js
 
-const BASE_URL = "https://appointment.shebabingo.com/api/orders";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const BASE_URL = `${API_BASE_URL}/orders`;
 
 // Get all orders with pagination (no filters)
 export async function getOrders(token, { page = 1, limit = 10 } = {}) {

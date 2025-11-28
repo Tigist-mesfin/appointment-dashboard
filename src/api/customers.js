@@ -1,6 +1,7 @@
 // src/api/customers.js
 
-const BASE_URL = "https://appointment.shebabingo.com/api/customers";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const BASE_URL = `${API_BASE_URL}/customers`;
 
 export async function getAllCustomers(token, page = 1, limit = 10) {
   const url = `${BASE_URL}?page=${page}&limit=${limit}`;
