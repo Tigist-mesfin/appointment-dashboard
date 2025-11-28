@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login";
-import Registration from "./pages/Registration";
+
 import DashboardLayout from "./pages/DashboardLayout";
 
 import Customer from "./pages/Customer";
@@ -24,7 +24,7 @@ export default function App() {
     <Routes>
       {/* Auth pages */}
       <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Registration />} />
+    
 
       {/* Protected dashboard with nested routes */}
       <Route

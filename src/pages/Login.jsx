@@ -119,12 +119,12 @@ export default function Login() {
         </CardContent>
 
         <CardFooter className="justify-center">
-          <p className="text-sm text-gray-500">
+          {/* <p className="text-sm text-gray-500">
             Don't have an account?{" "}
              <Link to="/register" className="text-blue-500 cursor-pointer">
                Sign Up
              </Link>
-          </p>
+          </p> */}
         </CardFooter>
       </Card>
     </div>
